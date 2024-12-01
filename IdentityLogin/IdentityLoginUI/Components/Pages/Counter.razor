@@ -1,0 +1,41 @@
+﻿@page "/"
+@inject NavigationManager NavigationManager
+@inject IPublicClientApplication PublicClientApp
+@rendermode InteractiveServer
+
+<PageTitle>Counter</PageTitle>
+
+<button class="btn btn-primary" @onclick="RouteToWeather">Weather</button>
+<button class="btn btn-primary" @onclick="Login">Login</button>
+
+@code {
+    private void RouteToWeather()
+    {
+        NavigationManager.NavigateTo("/weather");
+    }
+
+    private async Task Login()
+    {
+        var scopes = new[] { "User.Read" };
+        AuthenticationResult result;
+
+        try
+        {
+            var accounts = await PublicClientApp.GetAccountsAsync();
+            result = await PublicClientApp.AcquireTokenSilent(scopes, accounts.FirstOrDefault())
+                .ExecuteAsync();
+        }
+        catch (MsalUiRequiredException)
+        {
+            result = await PublicClientApp.AcquireTokenInteractive(scopes)
+                .WithUseEmbeddedWebView(true) // Use embedded web view for popup
+                .ExecuteAsync();
+        }
+
+        var accessToken = result.AccessToken;
+
+        // Store the access token for API calls
+        // For example, you can use a service to store the token
+        // TokenService.StoreToken(accessToken);
+    }
+}
